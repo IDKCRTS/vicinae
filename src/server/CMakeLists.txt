@@ -1390,7 +1390,6 @@ set(VICINAE_QML_FILES
 	src/ui/qml/list/ThemeItemDelegate.qml
 	src/ui/qml/views/GenericGridView.qml
 	src/ui/qml/views/GridCell.qml
-	src/ui/qml/views/GridCell.qml
 	src/ui/qml/views/EmptyView.qml
 	src/ui/qml/views/EmojiGridView.qml
 	src/ui/qml/controls/ViciButton.qml
@@ -1769,6 +1768,7 @@ qt_add_translations(${TARGET}
 		${CMAKE_CURRENT_SOURCE_DIR}/translations/vicinae_de.ts
 		${CMAKE_CURRENT_SOURCE_DIR}/translations/vicinae_fr.ts
 		${CMAKE_CURRENT_SOURCE_DIR}/translations/vicinae_it.ts
+		${CMAKE_CURRENT_SOURCE_DIR}/translations/vicinae_ja.ts
 		${CMAKE_CURRENT_SOURCE_DIR}/translations/vicinae_pl.ts
 		${CMAKE_CURRENT_SOURCE_DIR}/translations/vicinae_ru.ts
 		${CMAKE_CURRENT_SOURCE_DIR}/translations/vicinae_uk.ts
