@@ -2,6 +2,7 @@
 #include <QQmlEngine>
 #include <algorithm>
 #include <cmath>
+#include <ranges>
 #include <utility>
 #include "document-layout.hpp"
 #include "document-scope.hpp"
