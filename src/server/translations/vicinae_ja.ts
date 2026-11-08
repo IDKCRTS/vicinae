@@ -4263,7 +4263,7 @@ Find the full stacktrace below. You can also directly copy it from the action me
 <context>
     <name>GeneralSettingsModel</name>
     <message>
-        <location filename="../src/ui/settings/general-settings-model.cpp" line="+208"/>
+        <location filename="../src/ui/settings/general-settings-model.cpp" line="+220"/>
         <location line="+12"/>
         <source>Automatic</source>
         <translation>自動</translation>
@@ -4353,6 +4353,16 @@ Find the full stacktrace below. You can also directly copy it from the action me
     </message>
     <message>
         <location line="+13"/>
+        <source>Launch at login</source>
+        <translation>ログイン時に起動</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Start Vicinae automatically when you log in.</source>
+        <translation>ログイン時にVicinaeを自動的に起動します。</translation>
+    </message>
+    <message>
+        <location line="+8"/>
         <source>Close on focus loss</source>
         <translation>フォーカスが外れたら閉じる</translation>
     </message>

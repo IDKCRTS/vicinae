@@ -29,6 +29,7 @@ enum class Capability {
   NativePanels,
   WindowMaterial,
   CustomWindowRounding,
+  LaunchAtLogin,
 };
 
 bool supports(Capability cap);

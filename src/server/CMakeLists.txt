@@ -1019,6 +1019,8 @@ elseif (WIN32)
 		src/services/paste/windows-paste-service.cpp
 		src/services/selection/windows-selection-service.hpp
 		src/services/selection/windows-selection-service.cpp
+		src/services/autostart/windows-login-item.hpp
+		src/services/autostart/windows-login-item.cpp
 		src/services/snippet/windows-snippet-server.hpp
 		src/services/snippet/windows-snippet-server.cpp
 		src/services/files-service/windows/win-file-candidates.hpp
@@ -1066,6 +1068,10 @@ elseif (WIN32)
 	)
 	list(APPEND LIBS shell32 ole32 shlwapi user32 gdi32 advapi32 version windowsapp dwmapi comctl32 uuid uiautomationcore powrprof everything-sdk3 wintrust crypt32)
 	add_compile_definitions(VICINAE_BUNDLE_ID="${VICINAE_BUNDLE_ID}")
+
+	if (AUTO_ENABLE_AUTOSTART)
+		add_compile_definitions(AUTO_ENABLE_AUTOSTART)
+	endif()
 else()
 	list(APPEND SRCS
 		src/app-platform.cpp

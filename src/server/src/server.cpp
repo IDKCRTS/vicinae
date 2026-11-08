@@ -144,7 +144,7 @@
 #endif
 
 #ifdef AUTO_ENABLE_AUTOSTART
-#include "services/autostart/macos-login-item.hpp"
+#include "services/autostart/login-item.hpp"
 #endif
 
 #ifdef Q_OS_MACOS
@@ -272,7 +272,7 @@ int startServer(const ServerLaunchOptions &launchOpts) {
 #endif
 
 #ifdef AUTO_ENABLE_AUTOSTART
-  vicinae::macos::registerLoginItemOnce();
+  vicinae::autostart::registerLoginItemOnce();
 #endif
 
   ServiceRegistry serviceRegistry;

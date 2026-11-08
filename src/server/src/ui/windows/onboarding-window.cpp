@@ -12,6 +12,7 @@
 #include "ui/bridges/style-bridge.hpp"
 #include "ui/bridges/theme-bridge.hpp"
 #include "services/app-service/app-service.hpp"
+#include "services/autostart/login-item.hpp"
 #include "vicinae.hpp"
 #include <QDateTime>
 #include <QDebug>
@@ -22,7 +23,6 @@
 
 #ifdef Q_OS_MACOS
 #include "ui/quick/macos-chrome-attached.hpp"
-#include "services/autostart/macos-login-item.hpp"
 #endif
 
 struct OnboardingState {
@@ -55,25 +55,15 @@ bool OnboardingWindow::shouldShow() {
 #endif
 }
 
-bool OnboardingWindow::loginItemSupported() const {
-#ifdef Q_OS_MACOS
-  return vicinae::macos::isLoginItemSupported();
-#else
-  return false;
-#endif
-}
+bool OnboardingWindow::loginItemSupported() const { return vicinae::autostart::isLoginItemSupported(); }
 
 void OnboardingWindow::setLoginItemEnabled(bool enabled) {
-#ifdef Q_OS_MACOS
-  vicinae::macos::setLoginItemEnabled(enabled);
-  const bool effective = vicinae::macos::isLoginItemEnabled();
+  vicinae::autostart::setLoginItemEnabled(enabled);
+  const bool effective = vicinae::autostart::isLoginItemEnabled();
   if (effective != m_loginItemEnabled) {
     m_loginItemEnabled = effective;
     emit loginItemEnabledChanged();
   }
-#else
-  Q_UNUSED(enabled);
-#endif
 }
 
 void OnboardingWindow::finish() {
@@ -111,9 +101,7 @@ void OnboardingWindow::ensureInitialized() {
   QmlEngineScope::set(&m_engine, m_configBridge);
 
   m_permissions = new MacosPermissionService(this);
-#ifdef Q_OS_MACOS
-  m_loginItemEnabled = vicinae::macos::isLoginItemEnabled();
-#endif
+  m_loginItemEnabled = vicinae::autostart::isLoginItemEnabled();
 
   loadRoot();
 }

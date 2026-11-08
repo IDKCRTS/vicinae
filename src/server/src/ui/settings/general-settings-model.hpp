@@ -15,6 +15,8 @@ class GeneralSettingsModel : public QObject {
   Q_PROPERTY(bool inputServerEnabled READ inputServerEnabled WRITE setInputServerEnabled NOTIFY configChanged)
   Q_PROPERTY(bool trayEnabled READ trayEnabled WRITE setTrayEnabled NOTIFY configChanged)
   Q_PROPERTY(bool showUpdateNotice READ showUpdateNotice WRITE setShowUpdateNotice NOTIFY configChanged)
+  Q_PROPERTY(bool launchAtLogin READ launchAtLogin WRITE setLaunchAtLogin NOTIFY launchAtLoginChanged)
+  Q_PROPERTY(bool launchAtLoginSupported READ launchAtLoginSupported CONSTANT)
   Q_PROPERTY(bool closeOnFocusLoss READ closeOnFocusLoss WRITE setCloseOnFocusLoss NOTIFY configChanged)
   Q_PROPERTY(bool closeOnEscape READ closeOnEscape WRITE setCloseOnEscape NOTIFY configChanged)
   Q_PROPERTY(bool considerPreedit READ considerPreedit WRITE setConsiderPreedit NOTIFY configChanged)
@@ -57,6 +59,7 @@ class GeneralSettingsModel : public QObject {
 
 signals:
   void configChanged();
+  void launchAtLoginChanged();
 
 public:
   explicit GeneralSettingsModel(QObject *parent = nullptr);
@@ -105,6 +108,9 @@ public:
   void setTrayEnabled(bool v);
   bool showUpdateNotice() const;
   void setShowUpdateNotice(bool v);
+  bool launchAtLogin() const;
+  void setLaunchAtLogin(bool v);
+  bool launchAtLoginSupported() const;
   QString fontSize() const;
   void setFontSize(const QString &v);
 

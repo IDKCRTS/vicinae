@@ -54,6 +54,16 @@ Flickable {
             }
 
             SettingsRow {
+                label: qsTr("Launch at login")
+                visible: root.model.launchAtLoginSupported
+                description: qsTr("Start Vicinae automatically when you log in.")
+                SettingsToggle {
+                    checked: root.model.launchAtLogin
+                    onToggled: checked => root.model.launchAtLogin = checked
+                }
+            }
+
+            SettingsRow {
                 label: qsTr("Close on focus loss")
                 // on Windows we always do that.
                 visible: Qt.platform.os != "windows"

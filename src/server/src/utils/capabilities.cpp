@@ -1,6 +1,7 @@
 #include "capabilities.hpp"
 #include "environment.hpp"
 #include "service-registry.hpp"
+#include "services/autostart/login-item.hpp"
 #include "services/global-shortcuts/global-shortcut-service.hpp"
 #include "services/window-material/window-material-manager.hpp"
 #include <array>
@@ -16,7 +17,7 @@ bool windowsAcrylicSupported();
 
 namespace platform {
 
-static constexpr std::array<std::pair<std::string_view, Capability>, 9> CAPABILITY_NAMES{{
+static constexpr auto CAPABILITY_NAMES = std::to_array<std::pair<std::string_view, Capability>>({
     {"layerShell", Capability::LayerShell},
     {"globalShortcuts", Capability::GlobalShortcuts},
     {"inputServer", Capability::InputServer},
@@ -26,7 +27,8 @@ static constexpr std::array<std::pair<std::string_view, Capability>, 9> CAPABILI
     {"nativePanels", Capability::NativePanels},
     {"windowMaterial", Capability::WindowMaterial},
     {"customWindowRounding", Capability::CustomWindowRounding},
-}};
+    {"launchAtLogin", Capability::LaunchAtLogin},
+});
 
 bool supports(Capability cap) {
   switch (cap) {
@@ -77,6 +79,8 @@ bool supports(Capability cap) {
 #else
     return true;
 #endif
+  case Capability::LaunchAtLogin:
+    return vicinae::autostart::isLoginItemSupported();
   }
 
   return false;

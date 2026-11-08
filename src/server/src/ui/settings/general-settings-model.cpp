@@ -1,6 +1,7 @@
 #include "ui/settings/general-settings-model.hpp"
 #include "capabilities.hpp"
 #include "config/config.hpp"
+#include "services/autostart/login-item.hpp"
 #include "ui/views/view-utils.hpp"
 #include "service-registry.hpp"
 #include "theme/theme.hpp"
@@ -167,6 +168,17 @@ bool GeneralSettingsModel::showUpdateNotice() const { return cfg().updates.showN
 
 void GeneralSettingsModel::setShowUpdateNotice(bool v) {
   cfgManager().mergeWithUser({.updates = config::Partial<config::Updates>{.showNotice = v}});
+}
+
+bool GeneralSettingsModel::launchAtLogin() const { return vicinae::autostart::isLoginItemEnabled(); }
+
+void GeneralSettingsModel::setLaunchAtLogin(bool v) {
+  vicinae::autostart::setLoginItemEnabled(v);
+  emit launchAtLoginChanged();
+}
+
+bool GeneralSettingsModel::launchAtLoginSupported() const {
+  return vicinae::autostart::isLoginItemSupported();
 }
 
 QString GeneralSettingsModel::windowOpacity() const {
