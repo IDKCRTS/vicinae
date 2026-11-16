@@ -1,3 +1,4 @@
+#include <QCoreApplication>
 #include <QtLogging>
 #include <future>
 #include <windows.h>
@@ -175,6 +176,7 @@ LRESULT CALLBACK keyboardHookProc(int nCode, WPARAM wParam, LPARAM lParam) {
 WindowsGlobalShortcutBackend::~WindowsGlobalShortcutBackend() {
   unbindAll();
   g_backend = nullptr;
+  if (auto *app = QCoreApplication::instance()) { app->removeNativeEventFilter(this); }
   if (m_hookThread.joinable()) {
     PostThreadMessageW(m_hookThreadId, WM_QUIT, 0, 0);
     m_hookThread.join();
@@ -185,6 +187,7 @@ bool WindowsGlobalShortcutBackend::start() {
   if (m_started) { return true; }
 
   g_backend = this;
+  QCoreApplication::instance()->installNativeEventFilter(this);
 
   std::promise<bool> installed;
   auto installedFuture = installed.get_future();
@@ -214,6 +217,31 @@ bool WindowsGlobalShortcutBackend::start() {
 void WindowsGlobalShortcutBackend::activate(const QString &id) {
   QMetaObject::invokeMethod(
       this, [this, id]() { emit shortcutActivated(id, GetTickCount64()); }, Qt::QueuedConnection);
+}
+
+// The low-level hook is blind while an elevated window is focused (UIPI):
+// it is never called for input destined to a higher integrity process, so
+// hotkeys stop working over admin apps (e.g. games). RegisterHotKey is not
+// affected by UIPI, so fall back to WM_HOTKEY in that case. There is no risk
+// of double activation: whenever the hook sees a key it eats it, and the
+// combo never reaches the hotkey registration.
+bool WindowsGlobalShortcutBackend::nativeEventFilter(const QByteArray &eventType, void *message,
+                                                     qintptr *result) {
+  if (eventType != "windows_generic_MSG") return false;
+
+  const auto *msg = static_cast<MSG *>(message);
+  if (msg->message != WM_HOTKEY) return false;
+
+  {
+    std::scoped_lock lock(m_targetsMutex);
+    for (const auto &target : m_targets) {
+      if (target.regId && target.regId == static_cast<int>(msg->wParam)) {
+        activate(target.id);
+        return true;
+      }
+    }
+  }
+  return false;
 }
 
 void WindowsGlobalShortcutBackend::release(const QString &id) {
@@ -311,7 +339,10 @@ WindowsGlobalShortcutBackend::bindShortcut(const GlobalShortcutRequest &request)
 
   const int regId = m_nextRegistrationId++;
 
-  // The hook activates shortcuts; the registration only keeps other apps from claiming the combo.
+  // The hook activates shortcuts in the common case; the registration keeps
+  // other apps from claiming the combo and serves as the activation fallback
+  // when the hook cannot see the keys (elevated foreground window, see
+  // nativeEventFilter).
   const bool registered = RegisterHotKey(nullptr, regId, mods, *vk);
 
   std::scoped_lock lock(m_targetsMutex);

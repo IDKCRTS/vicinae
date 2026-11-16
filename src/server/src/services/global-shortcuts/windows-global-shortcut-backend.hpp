@@ -1,11 +1,12 @@
 #pragma once
+#include <QAbstractNativeEventFilter>
 #include <expected>
 #include <mutex>
 #include <thread>
 #include <vector>
 #include "services/global-shortcuts/abstract-global-shortcut-backend.hpp"
 
-class WindowsGlobalShortcutBackend : public AbstractGlobalShortcutBackend {
+class WindowsGlobalShortcutBackend : public AbstractGlobalShortcutBackend, public QAbstractNativeEventFilter {
   Q_OBJECT
 
 public:
@@ -33,6 +34,7 @@ private:
     bool down;
   };
 
+  bool nativeEventFilter(const QByteArray &eventType, void *message, qintptr *result) override;
   bool dispatchModifier(unsigned int mods, bool down);
   void activate(const QString &id);
   void release(const QString &id);
