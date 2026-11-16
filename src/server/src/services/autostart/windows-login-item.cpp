@@ -1,6 +1,7 @@
 #include "windows-login-item.hpp"
 
 #include <QCoreApplication>
+#include <QDir>
 #include <QSettings>
 #include <qlogging.h>
 #include <filesystem>
@@ -48,7 +49,10 @@ void setLoginItemEnabled(bool enabled) {
   QSettings settings(RUN_KEY, QSettings::NativeFormat);
 
   if (enabled) {
-    settings.setValue(VALUE_NAME, QStringLiteral("\"%1\"").arg(QCoreApplication::applicationFilePath()));
+    // the path must use native separators: explorer runs this value through
+    // ShellExecute at logon, which does not reliably handle forward slashes
+    const auto exe = QDir::toNativeSeparators(QCoreApplication::applicationFilePath());
+    settings.setValue(VALUE_NAME, QStringLiteral("\"%1\"").arg(exe));
   } else {
     settings.remove(VALUE_NAME);
   }
