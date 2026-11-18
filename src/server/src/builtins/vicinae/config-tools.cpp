@@ -18,6 +18,40 @@ AI::AbstractTool::RawToolTask ready(AI::AbstractTool::RawToolResult result) {
 
 } // namespace config_tools
 
+namespace {
+
+// one approved write_config call must never be able to disable the approval gate
+// of other tools (e.g. shell execution): reject any patch touching
+// providers.<id>.tools.<tool>.policy
+bool touchesToolPolicy(const glz::generic &patch) {
+  const auto *providers = patch.get_if<glz::generic::object_t>();
+  if (!providers) return false;
+
+  for (const auto &[providerId, provider] : *providers) {
+    const auto *providerObj = provider.get_if<glz::generic::object_t>();
+    if (!providerObj) continue;
+
+    for (const auto &[key, group] : *providerObj) {
+      if (key != "tools") continue;
+
+      const auto *tools = group.get_if<glz::generic::object_t>();
+      if (!tools) continue;
+
+      for (const auto &[toolId, tool] : *tools) {
+        const auto *toolObj = tool.get_if<glz::generic::object_t>();
+        if (!toolObj) continue;
+        for (const auto &[toolKey, toolValue] : *toolObj) {
+          if (toolKey == "policy") return true;
+        }
+      }
+    }
+  }
+
+  return false;
+}
+
+} // namespace
+
 using namespace config_tools;
 
 std::string ReadConfigTool::description() const {
@@ -69,6 +103,16 @@ AI::AbstractTool::RawToolTask WriteConfigTool::runRaw(std::string_view arguments
   WriteConfigInput input;
   if (const auto error = glz::read_json(input, arguments))
     return ready(std::unexpected(glz::format_error(error, arguments)));
+
+  glz::generic patch;
+  if (const auto error = glz::read_json(patch, input.patch.str))
+    return ready(
+        std::unexpected(std::format("Invalid patch: {}", glz::format_error(error, input.patch.str))));
+
+  if (touchesToolPolicy(patch))
+    return ready(std::unexpected(std::string(
+        "Tool approval policies cannot be changed through write_config. Ask the user to change them "
+        "in the AI settings instead.")));
 
   const auto path = m_config.path();
   config::Partial<config::ConfigValue> current;
