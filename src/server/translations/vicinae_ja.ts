@@ -4543,7 +4543,26 @@ Find the full stacktrace below. You can also directly copy it from the action me
 <context>
     <name>InstallExtensionAction</name>
     <message>
-        <location filename="../src/actions/extension-actions.cpp" line="+15"/>
+        <location filename="../src/actions/extension-actions.cpp" line="+20"/>
+        <source>Install &quot;%1&quot;?</source>
+        <translation>「%1」をインストールしますか？</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Extensions run with the same privileges as Vicinae and can access your data. Only install extensions from sources you trust.
+
+Identifier: %1</source>
+        <translation>拡張機能はVicinaeと同じ権限で動作し、あなたのデータにアクセスできます。信頼できる提供元の拡張機能のみインストールしてください。
+
+識別子： %1</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Install</source>
+        <translation>インストール</translation>
+    </message>
+    <message>
+        <location line="+7"/>
         <source>Downloading extension...</source>
         <translation>拡張機能をダウンロード中...</translation>
     </message>
@@ -4553,7 +4572,12 @@ Find the full stacktrace below. You can also directly copy it from the action me
         <translation>拡張機能をダウンロードできませんでした</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+10"/>
+        <source>Extension archive failed checksum verification</source>
+        <translation>拡張機能アーカイブのチェックサム検証に失敗しました</translation>
+    </message>
+    <message>
+        <location line="+7"/>
         <source>Failed to extract extension archive</source>
         <translation>拡張機能のアーカイブを展開できませんでした</translation>
     </message>
@@ -4563,7 +4587,7 @@ Find the full stacktrace below. You can also directly copy it from the action me
         <translation>拡張機能をインストールしました</translation>
     </message>
     <message>
-        <location filename="../src/actions/extension-actions.hpp" line="+28"/>
+        <location filename="../src/actions/extension-actions.hpp" line="+32"/>
         <source>Install extension</source>
         <translation>拡張機能をインストール</translation>
     </message>
@@ -4634,6 +4658,30 @@ Find the full stacktrace below. You can also directly copy it from the action me
         <location line="+1"/>
         <source>Internal Commands</source>
         <translation>内部コマンド</translation>
+    </message>
+</context>
+<context>
+    <name>IpcCommandHandler</name>
+    <message>
+        <location filename="../src/ipc/ipc-command-handler.cpp" line="+189"/>
+        <source>Launch &quot;%1&quot;?</source>
+        <translation>「%1」を起動しますか？</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>An external application or website requested to launch this command with the following arguments:
+
+%1
+Only continue if you trust the source of this request.</source>
+        <translation>外部アプリケーションまたはウェブサイトが、以下の引数でこのコマンドの起動を要求しました:
+
+%1
+要求元を信頼できる場合のみ続行してください。</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Launch</source>
+        <translation>起動</translation>
     </message>
 </context>
 <context>
@@ -6848,7 +6896,7 @@ Vicinae独自の[Extension Store](vicinae://launch/core/store)もあります。
         <translation>Extension Store</translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+18"/>
         <source>Report issue</source>
         <translation>問題を報告</translation>
     </message>
@@ -9417,7 +9465,7 @@ Vicinae独自の[Extension Store](vicinae://launch/core/store)もあります。
 <context>
     <name>UninstallExtensionAction</name>
     <message>
-        <location filename="../src/actions/extension-actions.cpp" line="+10"/>
+        <location filename="../src/actions/extension-actions.cpp" line="+13"/>
         <source>Are you sure?</source>
         <translation>実行しますか？</translation>
     </message>
@@ -9657,7 +9705,7 @@ Vicinae Extension Storeでは、主要な開発メンバーが承認したコミ
         <translation>Extension Store</translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+18"/>
         <source>Report issue</source>
         <translation>問題を報告</translation>
     </message>
@@ -10647,7 +10695,7 @@ Vicinae Extension Storeでは、主要な開発メンバーが承認したコミ
 <context>
     <name>WindowsGlobalShortcutBackend</name>
     <message>
-        <location filename="../src/services/global-shortcuts/windows-global-shortcut-backend.cpp" line="+302"/>
+        <location filename="../src/services/global-shortcuts/windows-global-shortcut-backend.cpp" line="+330"/>
         <source>unsupported or invalid trigger</source>
         <translation>未対応または無効なトリガーです</translation>
     </message>
