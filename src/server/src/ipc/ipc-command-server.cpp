@@ -1,5 +1,6 @@
 #include "ipc/ipc-command-server.hpp"
 #include "ipc/browser-peer.hpp"
+#include "common/common.hpp"
 #include "command/argument.hpp"
 #include "command/command-types.hpp"
 #include "common/entrypoint.hpp"
@@ -22,6 +23,8 @@
 #include <cstdint>
 #include <optional>
 #include <QFutureWatcher>
+#include <QRandomGenerator>
+#include <fstream>
 #include <QPromise>
 #include <QTimer>
 #include <QtConcurrentRun>
@@ -491,9 +494,10 @@ void IpcConnection::SocketTransport::send(std::string_view data) {
   socket->write(data.data(), data.size());
 }
 
-IpcConnection::IpcConnection(QLocalSocket *socket, ApplicationContext &ctx, QObject *parent)
+IpcConnection::IpcConnection(QLocalSocket *socket, ApplicationContext &ctx, const std::string &token,
+                             QObject *parent)
     : QObject(parent), m_socket(socket), m_transport(socket), m_rpc(m_transport),
-      m_service(new IpcService(m_rpc, ctx)), m_server(m_rpc, m_service) {
+      m_service(new IpcService(m_rpc, ctx)), m_server(m_rpc, m_service), m_token(token) {
   m_socket->setParent(this);
   connect(m_socket, &QLocalSocket::readyRead, this, &IpcConnection::handleRead);
 }
@@ -510,7 +514,18 @@ void IpcConnection::handleRead() {
 
       const auto packet = QByteArrayView(m_frame).sliced(sizeof(uint32_t), length);
 
-      m_server.route({packet.data(), static_cast<size_t>(packet.size())});
+      if (!m_authenticated) {
+        // the very first frame must carry the IPC token as raw bytes; anything
+        // else is treated as an unauthorized client and dropped
+        if (packet != QByteArrayView(m_token.data(), m_token.size())) {
+          qWarning() << "IPC client failed token authentication, dropping connection";
+          m_socket->abort();
+          return;
+        }
+        m_authenticated = true;
+      } else {
+        m_server.route({packet.data(), static_cast<size_t>(packet.size())});
+      }
 
       m_frame = m_frame.sliced(sizeof(uint32_t) + length);
     }
@@ -535,8 +550,30 @@ void IpcCommandServer::handleConnection() {
 
   qDebug() << "ipc command server received new connection";
 
-  auto *connection = new IpcConnection(socket, m_ctx, this);
+  auto *connection = new IpcConnection(socket, m_ctx, m_token, this);
   connect(socket, &QLocalSocket::disconnected, this, [this, connection] { handleDisconnection(connection); });
+}
+
+bool IpcCommandServer::writeToken() {
+  constexpr int TOKEN_BYTES = 32;
+  QByteArray raw(TOKEN_BYTES, Qt::Uninitialized);
+  QRandomGenerator::system()->generate(raw.begin(), raw.end());
+  m_token = QString::fromLatin1(raw.toHex()).toStdString();
+
+  std::ofstream ofs(vicinae::ipcTokenPath(), std::ios::binary | std::ios::trunc);
+  if (!ofs) {
+    qCritical() << "Failed to write IPC token to" << vicinae::ipcTokenPath().string().c_str();
+    return false;
+  }
+  ofs << m_token << '\n';
+
+#ifndef _WIN32
+  std::filesystem::permissions(vicinae::ipcTokenPath(),
+                               std::filesystem::perms::owner_read | std::filesystem::perms::owner_write,
+                               std::filesystem::perm_options::replace);
+#endif
+
+  return true;
 }
 
 bool IpcCommandServer::start(const std::string &name) {
@@ -544,6 +581,14 @@ bool IpcCommandServer::start(const std::string &name) {
   // Named pipes have no filesystem entry; only a POSIX socket file can go stale and block listen().
   if (std::filesystem::exists(name)) { std::filesystem::remove(name); }
 #endif
+
+  // Restrict the pipe/socket to the current user. On Windows this makes Qt
+  // build an explicit DACL from the process token (the default descriptor also
+  // grants Administrators), on Unix it maps to 0600 file permissions.
+  m_server.setSocketOptions(QLocalServer::UserAccessOption);
+
+  // the token must exist before any client can connect
+  if (!writeToken()) { return false; }
 
   if (!m_server.listen(QString::fromStdString(name))) {
     qDebug() << "CommandServer failed to listen" << m_server.errorString();

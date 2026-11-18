@@ -32,4 +32,9 @@ std::filesystem::path serverSocketPath();
 
 std::string currentUserName();
 std::string serverSocketName();
+
+// path of the secret token clients must send as their first frame to authenticate
+// against the IPC server
+std::filesystem::path ipcTokenPath();
+std::optional<std::string> readIpcToken();
 }; // namespace vicinae

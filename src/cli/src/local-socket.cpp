@@ -1,4 +1,5 @@
 #include "local-socket.hpp"
+#include "common/common.hpp"
 #include <format>
 
 #ifdef _WIN32
@@ -13,6 +14,22 @@
 
 namespace cli {
 
+namespace {
+
+// the server requires the IPC token as a length-prefixed frame before any RPC
+std::optional<std::string> authenticate(LocalSocket &sock) {
+  auto token = vicinae::readIpcToken();
+  if (!token) return std::string("Cannot read the IPC token, cannot authenticate against the server");
+
+  const uint32_t size = static_cast<uint32_t>(token->size());
+  if (!sock.writeAll(&size, sizeof(size)) || !sock.writeAll(token->data(), token->size()))
+    return std::string("Failed to send the IPC authentication token");
+
+  return std::nullopt;
+}
+
+} // namespace
+
 #ifdef _WIN32
 
 std::expected<LocalSocket, std::string> LocalSocket::connect(const std::string &name) {
@@ -22,7 +39,9 @@ std::expected<LocalSocket, std::string> LocalSocket::connect(const std::string &
   if (h == INVALID_HANDLE_VALUE)
     return std::unexpected(std::format("Failed to connect to {}: error {}", pipe, GetLastError()));
 
-  return LocalSocket(h);
+  LocalSocket sock(h);
+  if (auto err = authenticate(sock)) return std::unexpected(*err);
+  return sock;
 }
 
 LocalSocket::~LocalSocket() {
@@ -80,7 +99,9 @@ std::expected<LocalSocket, std::string> LocalSocket::connect(const std::string &
     return std::unexpected(std::format("Failed to connect to {}: {}", name, strerror(errno)));
   }
 
-  return LocalSocket(fd);
+  LocalSocket sock(fd);
+  if (auto err = authenticate(sock)) return std::unexpected(*err);
+  return sock;
 }
 
 LocalSocket::~LocalSocket() {

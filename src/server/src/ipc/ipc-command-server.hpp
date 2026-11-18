@@ -56,7 +56,8 @@ private:
  */
 class IpcConnection : public QObject {
 public:
-  IpcConnection(QLocalSocket *socket, ApplicationContext &ctx, QObject *parent = nullptr);
+  IpcConnection(QLocalSocket *socket, ApplicationContext &ctx, const std::string &token,
+                QObject *parent = nullptr);
 
   QLocalSocket *socket() const { return m_socket; }
   IpcService *service() const { return m_service; }
@@ -78,6 +79,8 @@ private:
   // owned by m_server through Qt parenting
   IpcService *m_service;
   ipc_gen::Server m_server;
+  std::string m_token;
+  bool m_authenticated = false;
 };
 
 class IpcCommandServer : public QObject {
@@ -86,9 +89,11 @@ public:
   bool start(const std::string &name);
 
 private:
+  bool writeToken();
   void handleConnection();
   void handleDisconnection(IpcConnection *connection);
 
   QLocalServer m_server;
   ApplicationContext &m_ctx;
+  std::string m_token;
 };

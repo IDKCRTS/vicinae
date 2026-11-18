@@ -151,6 +151,17 @@ std::string currentUserName() {
 std::string serverSocketName() { return serverSocketPath().string(); }
 #endif
 
+std::filesystem::path ipcTokenPath() { return stateDir() / "ipc-token"; }
+
+std::optional<std::string> readIpcToken() {
+  std::ifstream ifs(ipcTokenPath(), std::ios::binary);
+  if (!ifs) return std::nullopt;
+  std::string token;
+  std::getline(ifs, token);
+  if (token.empty() || token.size() > 256) return std::nullopt;
+  return token;
+}
+
 std::optional<fs::path> findServerBinary() {
 #ifdef __APPLE__
   // Inside a .app bundle the server is renamed to "Vicinae" (matches

@@ -201,6 +201,19 @@ int main(int ac, char **av) {
     return 1;
   }
 
+  // authenticate before anything else: the server drops connections whose first
+  // frame is not the IPC token
+  if (auto token = vicinae::readIpcToken()) {
+    const uint32_t size = static_cast<uint32_t>(token->size());
+    socket.write(reinterpret_cast<const char *>(&size), sizeof(size));
+    socket.write(token->data(), token->size());
+    socket.flush();
+  } else {
+    std::println(std::cerr, "Cannot read the IPC token at {}, cannot authenticate against the server",
+                 vicinae::ipcTokenPath().string());
+    return 1;
+  }
+
   LocalSocketTransport transport(socket);
   ipc::RpcTransport rpc(transport);
   ipc::Client client(rpc);
