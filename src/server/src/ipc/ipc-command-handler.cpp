@@ -7,6 +7,7 @@
 #include "theme/theme-db.hpp"
 #include "services/root-item-manager/root-item-manager.hpp"
 #include "services/toast/toast-service.hpp"
+#include "ui/alert/alert.hpp"
 #include "ui/settings/settings-controller.hpp"
 #include "services/extension-registry/extension-registry.hpp"
 #include <algorithm>
@@ -54,13 +55,8 @@ std::expected<void, std::string> IpcCommandHandler::handleUrl(const QUrl &url) {
     path = "/" + pathParts.mid(1).join('/');
   }
 
-  // TODO: add a "quit" command to handle graceful shutdown (requires more work than you would expect)
-  if (command == "kill") {
-    qInfo() << "Killing vicinae server because a new instance was started";
-    QCoreApplication::exit(1);
-    return {};
-  }
-
+  // the kill action was removed: a web page or any other untrusted source must
+  // not be able to take the server down through a URL
   if (command == "ping") { return {}; }
 
   if (command == "toggle") {
@@ -179,13 +175,37 @@ std::expected<void, std::string> IpcCommandHandler::handleUrl(const QUrl &url) {
       }
     }
 
-    LaunchProps props{.arguments = std::move(arguments),
-                      .fallbackText = query.queryItemValue("fallbackText", QUrl::FullyDecoded),
-                      .source = LaunchSource::External};
-
-    if (!m_ctx.navigation->activateEntrypoint(id, {.props = props})) {
-      return std::unexpected("No primary action for this root item");
+    // an external source (typically a web page) is asking us to run one of the
+    // installed commands with caller-chosen arguments: require explicit user
+    // confirmation before doing anything
+    QString argsPreview;
+    for (const auto &[key, value] : arguments) {
+      argsPreview += QString("  • %1: %2\n").arg(key, value);
     }
+    if (argsPreview.isEmpty()) { argsPreview = "  (none)\n"; }
+
+    auto alert = new CallbackAlertWidget();
+
+    alert->setTitle(tr("Launch \"%1\"?").arg(QString::fromStdString(std::string{id})));
+    alert->setMessage(tr("An external application or website requested to launch this command "
+                         "with the following arguments:\n\n%1\nOnly continue if you trust the "
+                         "source of this request.")
+                          .arg(argsPreview));
+    alert->setConfirmText(tr("Launch"), SemanticColor::Accent);
+    alert->setCallback([&ctx = m_ctx, id, arguments,
+                        fallbackText = query.queryItemValue("fallbackText", QUrl::FullyDecoded)](bool ok) {
+      if (!ok) return;
+
+      LaunchProps props{
+          .arguments = std::move(arguments), .fallbackText = fallbackText, .source = LaunchSource::External};
+
+      if (!ctx.navigation->activateEntrypoint(id, {.props = props})) {
+        qWarning() << "No primary action for entrypoint" << std::string{id};
+      }
+    });
+
+    m_ctx.navigation->setDialog(alert);
+    return {};
 
     return {};
   }
