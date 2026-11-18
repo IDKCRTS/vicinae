@@ -2,7 +2,9 @@
 #include "utils.hpp"
 #include <zip/zip.h>
 #include <qlogging.h>
+#include <algorithm>
 #include <fstream>
+#include <ranges>
 
 ZipedFile::ZipedFile(zip_t *zip, const std::filesystem::path &path, int idx)
     : m_zip(zip), m_path(path), m_idx(idx) {}
@@ -20,16 +22,35 @@ std::string ZipedFile::readAll() {
   return data;
 }
 
-void Unzipper::extract(const std::filesystem::path &target, const Unzipper::ExtractOptions &opts) {
+namespace {
+
+// zip entry names are attacker-controlled data; refuse anything that could
+// escape the extraction root (zip-slip)
+bool isSafeRelativePath(const std::filesystem::path &path) {
+  if (path.empty() || path.is_absolute() || path.has_root_path()) return false;
+  return std::ranges::none_of(path, [](const std::filesystem::path &component) { return component == ".."; });
+}
+
+} // namespace
+
+bool Unzipper::extract(const std::filesystem::path &target, const Unzipper::ExtractOptions &opts) {
   int const sc = opts.stripComponents.value_or(0);
 
   for (auto &file : listFiles()) {
-    std::filesystem::path const path = target / stripPathComponents(file.path(), sc);
+    std::filesystem::path const relative = stripPathComponents(file.path(), sc);
+    if (!isSafeRelativePath(relative)) {
+      qWarning() << "Refusing to extract unsafe zip entry" << file.path().c_str();
+      return false;
+    }
+
+    std::filesystem::path const path = target / relative;
     std::filesystem::create_directories(path.parent_path());
     auto data = file.readAll();
     std::ofstream ofs(path, std::ios::binary);
     ofs.write(data.data(), static_cast<std::streamsize>(data.size()));
   }
+
+  return true;
 }
 
 std::vector<ZipedFile> Unzipper::listFiles() {

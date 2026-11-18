@@ -144,11 +144,12 @@ void VicinaeStoreDetailHost::createActions() {
   auto main = panel->createSection();
 
   if (!m_isInstalled) {
-    main->addAction(new InstallExtensionAction(QString("store.vicinae.%1").arg(m_ext.name),
-                                               m_ext.themedIcon(),
-                                               [url = m_ext.downloadUrl](const ApplicationContext *ctx) {
-                                                 return ctx->services->vicinaeStore()->downloadExtension(url);
-                                               }));
+    main->addAction(new InstallExtensionAction(
+        QString("store.vicinae.%1").arg(m_ext.name), m_ext.themedIcon(),
+        [url = m_ext.downloadUrl](const ApplicationContext *ctx) {
+          return ctx->services->vicinaeStore()->downloadExtension(url);
+        },
+        m_ext.checksum));
   } else {
     main->addAction(new UninstallExtensionAction(m_ext.id));
   }

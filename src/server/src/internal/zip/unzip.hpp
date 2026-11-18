@@ -33,7 +33,7 @@ private:
 public:
   operator bool() const { return m_zip != nullptr; }
 
-  void extract(const std::filesystem::path &target, const ExtractOptions &opts = {});
+  bool extract(const std::filesystem::path &target, const ExtractOptions &opts = {});
   std::vector<ZipedFile> listFiles();
 
   Unzipper(std::string_view data);

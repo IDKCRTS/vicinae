@@ -35,9 +35,26 @@ ExtensionRegistry::ExtensionRegistry(LocalStorageService &storage) : m_storage(s
 
 QFuture<bool> ExtensionRegistry::installFromZip(const QString &id, const std::string &data,
                                                 const std::function<void(bool)> &cb) {
+  const std::string sid = id.toStdString();
+
+  // the id ends up as a path component under the extensions directory; the
+  // caller may build it from remote data (e.g. a store extension name)
+  if (sid.empty() || sid == "." || sid == ".." || sid.find_first_of("/\\:") != std::string::npos) {
+    qCritical() << "Refusing to install extension with unsafe id" << id;
+    auto failed = QtConcurrent::run([]() { return false; });
+    auto watcher = new QFutureWatcher<bool>;
+    connect(watcher, &QFutureWatcher<bool>::finished, this, [this, cb, watcher]() {
+      if (watcher->isCanceled()) return;
+      if (cb) { cb(watcher->result()); }
+      watcher->deleteLater();
+    });
+    watcher->setFuture(failed);
+    return failed;
+  }
+
   fs::path const extensionsDir = localExtensionDirectory();
-  fs::path const extractDir = extensionsDir / id.toStdString();
-  fs::path const stagingDir = extensionsDir / (".staging-" + id.toStdString());
+  fs::path const extractDir = extensionsDir / sid;
+  fs::path const stagingDir = extensionsDir / (".staging-" + sid);
   auto future = QtConcurrent::run([id, data, extractDir, stagingDir]() {
     Unzipper unzip = std::string_view(data);
 
@@ -49,7 +66,12 @@ QFuture<bool> ExtensionRegistry::installFromZip(const QString &id, const std::st
     std::error_code ec;
 
     fs::remove_all(stagingDir, ec);
-    unzip.extract(stagingDir, {.stripComponents = 1});
+
+    if (!unzip.extract(stagingDir, {.stripComponents = 1})) {
+      qCritical() << "Unsafe or corrupted extension archive for" << id << ", discarding";
+      fs::remove_all(stagingDir, ec);
+      return false;
+    }
 
     if (!fs::is_regular_file(stagingDir / "package.json", ec)) {
       qCritical() << "Extracted bundle for" << id << "has no package.json, discarding";

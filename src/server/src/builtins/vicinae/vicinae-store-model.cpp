@@ -59,7 +59,8 @@ VicinaeStoreSection::buildActionPanel(const VicinaeStoreEntry &entry) const {
         QString("store.vicinae.%1").arg(entry.extension.name), entry.extension.themedIcon(),
         [url = entry.extension.downloadUrl](const ApplicationContext *ctx) {
           return ctx->services->vicinaeStore()->downloadExtension(url);
-        }));
+        },
+        entry.extension.checksum));
   }
 
   showDetails->setPrimary(true);
