@@ -60,7 +60,7 @@ VicinaeStoreSection::buildActionPanel(const VicinaeStoreEntry &entry) const {
         [url = entry.extension.downloadUrl](const ApplicationContext *ctx) {
           return ctx->services->vicinaeStore()->downloadExtension(url);
         },
-        entry.extension.checksum));
+        entry.extension.checksum, entry.extension.title));
   }
 
   showDetails->setPrimary(true);

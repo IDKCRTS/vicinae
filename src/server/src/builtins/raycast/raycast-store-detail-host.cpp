@@ -212,11 +212,12 @@ void RaycastStoreDetailHost::createActions() {
   auto main = panel->createSection();
 
   if (!m_isInstalled) {
-    main->addAction(new InstallExtensionAction(QString("store.raycast.%1").arg(m_ext.name),
-                                               m_ext.themedIcon(),
-                                               [url = m_ext.download_url](const ApplicationContext *ctx) {
-                                                 return ctx->services->raycastStore()->downloadExtension(url);
-                                               }));
+    main->addAction(new InstallExtensionAction(
+        QString("store.raycast.%1").arg(m_ext.name), m_ext.themedIcon(),
+        [url = m_ext.download_url](const ApplicationContext *ctx) {
+          return ctx->services->raycastStore()->downloadExtension(url);
+        },
+        {}, m_ext.title));
   } else {
     main->addAction(new UninstallExtensionAction(m_ext.id));
   }

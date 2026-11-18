@@ -149,7 +149,7 @@ void VicinaeStoreDetailHost::createActions() {
         [url = m_ext.downloadUrl](const ApplicationContext *ctx) {
           return ctx->services->vicinaeStore()->downloadExtension(url);
         },
-        m_ext.checksum));
+        m_ext.checksum, m_ext.title));
   } else {
     main->addAction(new UninstallExtensionAction(m_ext.id));
   }

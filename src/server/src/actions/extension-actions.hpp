@@ -16,14 +16,16 @@ public:
   using Downloader = std::function<QFuture<DownloadResult>(const ApplicationContext *ctx)>;
 
   InstallExtensionAction(const QString &installId, const ImageURL &icon, Downloader downloader,
-                         const QString &checksum = {})
-      : m_installId(installId), m_icon(icon), m_downloader(std::move(downloader)), m_checksum(checksum) {}
+                         const QString &checksum = {}, const QString &extensionTitle = {})
+      : m_installId(installId), m_icon(icon), m_downloader(std::move(downloader)), m_checksum(checksum),
+        m_extensionTitle(extensionTitle) {}
 
 private:
   QString m_installId;
   ImageURL m_icon;
   Downloader m_downloader;
   QString m_checksum;
+  QString m_extensionTitle;
 
   std::optional<ImageURL> icon() const override { return m_icon; }
   void execute(ApplicationContext *ctx) override;

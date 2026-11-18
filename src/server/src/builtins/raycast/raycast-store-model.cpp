@@ -61,7 +61,8 @@ std::unique_ptr<ActionPanelState> RaycastStoreSection::actionPanel(int i) const 
         QString("store.raycast.%1").arg(entry.extension.name), entry.extension.themedIcon(),
         [url = entry.extension.download_url](const ApplicationContext *ctx) {
           return ctx->services->raycastStore()->downloadExtension(url);
-        }));
+        },
+        {}, entry.extension.title));
   }
 
   showDetails->setPrimary(true);
