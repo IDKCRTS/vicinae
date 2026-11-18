@@ -1066,7 +1066,7 @@ elseif (WIN32)
 		src/services/update/windows-update-installer.hpp
 		src/services/update/windows-update-installer.cpp
 	)
-	list(APPEND LIBS shell32 ole32 shlwapi user32 gdi32 advapi32 version windowsapp dwmapi comctl32 uuid uiautomationcore powrprof everything-sdk3 wintrust crypt32)
+	list(APPEND LIBS shell32 ole32 shlwapi user32 gdi32 advapi32 version windowsapp dwmapi comctl32 uuid uiautomationcore powrprof everything-sdk3 wintrust crypt32 taskschd secur32)
 	add_compile_definitions(VICINAE_BUNDLE_ID="${VICINAE_BUNDLE_ID}")
 
 	if (AUTO_ENABLE_AUTOSTART)
